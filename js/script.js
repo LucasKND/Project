@@ -5,13 +5,17 @@ document.addEventListener('DOMContentLoaded', function() {
         "ENTREGA TOTALMENTE LEGALIZADA E COM RGI INDIVIDUALIZADO",
         "ONDE O BEM-ESTAR FAZ PARTE DA SUA ROTINA",
         "O MELHOR DAS VARGENS PARA QUEM QUER DESFRUTAR OS SEUS MELHORES MOMENTOS",
-        "SE A VIDA É FEITA DE CICLOS, VOCÊ ESTÁ PRESTES A VIVER O MELHOR DELES"
+        "SE A VIDA É FEITA DE CICLOS, VOCÊ ESTÁ PRESTES A VIVER O MELHOR DELES",
+        "CONHEÇA O NOVO CONCEITO DE MORADIA",
+        "SEGURANÇA E CONFORTO EM HARMONIA",
+        "NATUREZA E MODERNIDADE SE ENCONTRAM"
     ];
     
     // Elementos
     const carouselTextElement = document.getElementById('carousel-text');
     let currentTextIndex = 0;
-    const transitionDelay = 5000; // 5 segundos
+    const transitionDelay = 6000; // 6 segundos para cada texto
+    const fadeTime = 500; // 500ms para o efeito de fade
     
     // Iniciar com o primeiro texto
     carouselTextElement.textContent = carouselTexts[0];
@@ -31,18 +35,20 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Remover classe de fade para que o texto apareça
             carouselTextElement.classList.remove('fade');
-        }, 500); // Metade do tempo de transição do CSS
+        }, fadeTime);
     }
     
-    // Iniciar o intervalo para trocar os textos
-    const interval = setInterval(changeText, transitionDelay);
+    // Iniciar o intervalo para trocar os textos de forma consistente
+    let carouselInterval = setInterval(changeText, transitionDelay);
     
-    // Parar o carrossel quando a página não estiver visível
+    // Parar e reiniciar o carrossel quando a página não estiver visível
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) {
-            clearInterval(interval);
+            clearInterval(carouselInterval);
         } else {
-            setInterval(changeText, transitionDelay);
+            // Limpar qualquer intervalo existente antes de criar um novo
+            clearInterval(carouselInterval);
+            carouselInterval = setInterval(changeText, transitionDelay);
         }
     });
     
@@ -143,30 +149,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     window.addEventListener('load', setupMobileMenu);
     window.addEventListener('resize', setupMobileMenu);
-
-    // Carrossel de texto
-    const carouselText = document.getElementById('carousel-text');
-    const phrases = [
-        "CONHEÇA O NOVO CONCEITO DE MORADIA",
-        "SEGURANÇA E CONFORTO EM HARMONIA",
-        "NATUREZA E MODERNIDADE SE ENCONTRAM"
-    ];
-    let currentPhrase = 0;
-
-    // Função para animar o carrossel
-    function animateCarousel() {
-        carouselText.classList.add('fade');
-        
-        setTimeout(() => {
-            carouselText.textContent = phrases[currentPhrase];
-            currentPhrase = (currentPhrase + 1) % phrases.length;
-            carouselText.classList.remove('fade');
-        }, 500);
-    }
-
-    // Iniciar o carrossel
-    carouselText.textContent = phrases[0];
-    setInterval(animateCarousel, 4000);
 
     // Animação de scroll para o card
     const featureCard = document.querySelector('.feature-card');
