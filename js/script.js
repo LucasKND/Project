@@ -143,4 +143,98 @@ document.addEventListener('DOMContentLoaded', function() {
     
     window.addEventListener('load', setupMobileMenu);
     window.addEventListener('resize', setupMobileMenu);
+
+    // Carrossel de texto
+    const carouselText = document.getElementById('carousel-text');
+    const phrases = [
+        "CONHEÇA O NOVO CONCEITO DE MORADIA",
+        "SEGURANÇA E CONFORTO EM HARMONIA",
+        "NATUREZA E MODERNIDADE SE ENCONTRAM"
+    ];
+    let currentPhrase = 0;
+
+    // Função para animar o carrossel
+    function animateCarousel() {
+        carouselText.classList.add('fade');
+        
+        setTimeout(() => {
+            carouselText.textContent = phrases[currentPhrase];
+            currentPhrase = (currentPhrase + 1) % phrases.length;
+            carouselText.classList.remove('fade');
+        }, 500);
+    }
+
+    // Iniciar o carrossel
+    carouselText.textContent = phrases[0];
+    setInterval(animateCarousel, 4000);
+
+    // Animação de scroll para o card
+    const featureCard = document.querySelector('.feature-card');
+    let lastScrollTop = 0;
+    const scrollSpeed = 0.3; // Mantendo a velocidade atual
+    
+    // Função para animar o card durante o scroll com movimento mais suave
+    function animateCardOnScroll() {
+        const st = window.pageYOffset || document.documentElement.scrollTop;
+        
+        // Calcular a posição Y do card baseado no scroll de forma mais suave
+        if (st > 0) {
+            // Aumentando o limite máximo de deslocamento para 300px (era 120px)
+            // Isso permite que o card continue se movendo por mais tempo durante o scroll
+            const scrollAmount = -Math.min(st * scrollSpeed, 300);
+            
+            // Aplicar a transformação com uma transição suave via JS
+            requestAnimationFrame(() => {
+                featureCard.style.transform = `translateY(${scrollAmount}px)`;
+            });
+        } else {
+            // Retorna à posição original quando volta ao topo
+            featureCard.style.transform = 'translateY(0)';
+        }
+        
+        lastScrollTop = st <= 0 ? 0 : st;
+    }
+
+    // Adicionar evento de scroll com throttling para melhor performance
+    let ticking = false;
+    window.addEventListener('scroll', function() {
+        if (!ticking) {
+            window.requestAnimationFrame(function() {
+                animateCardOnScroll();
+                ticking = false;
+            });
+            ticking = true;
+        }
+    }, { passive: true });
+
+    // Animação para elementos aparecerem com scroll
+    function animateOnScroll() {
+        const aboutSection = document.querySelector('.about-section');
+        if (!aboutSection) return;
+        
+        const animateElements = aboutSection.querySelectorAll('.about-content h2, .about-text p, .more-info-btn, .about-logo');
+        const triggerPosition = window.innerHeight * 0.8;
+        
+        const checkScroll = function() {
+            const aboutSectionTop = aboutSection.getBoundingClientRect().top;
+            
+            if (aboutSectionTop < triggerPosition) {
+                animateElements.forEach(element => {
+                    element.classList.add('animate');
+                });
+                
+                // Remover o listener depois que as animações são ativadas
+                window.removeEventListener('scroll', checkScroll);
+            }
+        };
+        
+        // Verificar logo no carregamento caso a seção já esteja visível
+        checkScroll();
+        
+        // Adicionar evento de scroll para verificar quando a seção estiver visível
+        window.addEventListener('scroll', checkScroll, { passive: true });
+    }
+    
+    // Iniciar a animação com scroll
+    window.addEventListener('load', animateOnScroll);
 });
