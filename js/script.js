@@ -150,28 +150,42 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('load', setupMobileMenu);
     window.addEventListener('resize', setupMobileMenu);
 
-    // Animação de scroll para o card
+    // Animação de scroll para os cards
     const featureCard = document.querySelector('.feature-card');
+    const highlightCard = document.querySelector('.highlight-card');
     let lastScrollTop = 0;
-    const scrollSpeed = 0.3; // Mantendo a velocidade atual
+    const scrollSpeed = 0.3; // Mesma velocidade para ambos os cards
     
-    // Função para animar o card durante o scroll com movimento mais suave
-    function animateCardOnScroll() {
+    // Função unificada para animar os dois cards durante o scroll
+    function animateCardsOnScroll() {
         const st = window.pageYOffset || document.documentElement.scrollTop;
         
-        // Calcular a posição Y do card baseado no scroll de forma mais suave
+        // Calcular a posição Y dos cards baseado no scroll de forma mais suave
         if (st > 0) {
-            // Aumentando o limite máximo de deslocamento para 300px (era 120px)
-            // Isso permite que o card continue se movendo por mais tempo durante o scroll
+            // Mesmo limite de deslocamento para ambos os cards (300px)
             const scrollAmount = -Math.min(st * scrollSpeed, 300);
             
-            // Aplicar a transformação com uma transição suave via JS
-            requestAnimationFrame(() => {
-                featureCard.style.transform = `translateY(${scrollAmount}px)`;
-            });
+            // Aplicar a transformação ao card da imagem
+            if (featureCard) {
+                requestAnimationFrame(() => {
+                    featureCard.style.transform = `translateY(${scrollAmount}px)`;
+                });
+            }
+            
+            // Aplicar a mesma transformação ao highlight card
+            if (highlightCard) {
+                requestAnimationFrame(() => {
+                    highlightCard.style.transform = `translateY(${scrollAmount}px)`;
+                });
+            }
         } else {
             // Retorna à posição original quando volta ao topo
-            featureCard.style.transform = 'translateY(0)';
+            if (featureCard) {
+                featureCard.style.transform = 'translateY(0)';
+            }
+            if (highlightCard) {
+                highlightCard.style.transform = 'translateY(0)';
+            }
         }
         
         lastScrollTop = st <= 0 ? 0 : st;
@@ -182,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('scroll', function() {
         if (!ticking) {
             window.requestAnimationFrame(function() {
-                animateCardOnScroll();
+                animateCardsOnScroll();
                 ticking = false;
             });
             ticking = true;
