@@ -233,4 +233,295 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Iniciar a animação com scroll
     window.addEventListener('load', animateOnScroll);
+
+    // Funcionalidade de amenidades
+    const amenityItems = document.querySelectorAll('.amenity-item');
+    const amenityImages = document.querySelectorAll('.amenity-image');
+    let currentAmenityIndex = 0;
+    let isManualSelection = false;
+    let autoAdvanceTimeout;
+
+    // Função para selecionar uma amenidade
+    function selectAmenity(index, isManual = false) {
+        // Limpar seleção atual
+        amenityItems.forEach(item => {
+            item.classList.remove('active');
+            const progressBar = item.querySelector('.progress-bar');
+            progressBar.style.width = '0';
+        });
+        
+        amenityImages.forEach(image => {
+            image.classList.remove('active');
+        });
+        
+        // Ativar a nova seleção
+        const selectedItem = amenityItems[index];
+        selectedItem.classList.add('active');
+        
+        // Forçar um reflow antes de adicionar a animação para garantir que seja visível
+        selectedItem.querySelector('.progress-bar').getBoundingClientRect();
+        
+        // Definir explicitamente o progresso da barra visualmente
+        const progressBar = selectedItem.querySelector('.progress-bar');
+        progressBar.style.transition = 'none';
+        progressBar.style.width = '0';
+        
+        // Forçar outro reflow antes de iniciar a animação
+        progressBar.getBoundingClientRect();
+        
+        // Iniciar a animação de preenchimento da barra
+        progressBar.style.transition = 'width 4.8s linear';
+        progressBar.style.width = '100%';
+        
+        amenityImages[index].classList.add('active');
+        
+        // Atualizar índice atual
+        currentAmenityIndex = index;
+        
+        // Se foi seleção manual, parar o avanço automático temporariamente
+        if (isManual) {
+            isManualSelection = true;
+            clearTimeout(autoAdvanceTimeout);
+            
+            // Reiniciar o avanço automático após um tempo
+            setTimeout(() => {
+                isManualSelection = false;
+                scheduleNextAmenity();
+            }, 8000); // Permite que o usuário veja a seleção manual por 8 segundos
+        }
+    }
+    
+    // Função para avançar para a próxima amenidade
+    function advanceToNextAmenity() {
+        if (isManualSelection) return;
+        
+        const nextIndex = (currentAmenityIndex + 1) % amenityItems.length;
+        selectAmenity(nextIndex);
+        scheduleNextAmenity();
+    }
+    
+    // Agendar o próximo avanço
+    function scheduleNextAmenity() {
+        clearTimeout(autoAdvanceTimeout);
+        autoAdvanceTimeout = setTimeout(advanceToNextAmenity, 5000); // 5 segundos para cada amenidade
+    }
+    
+    // Adicionar event listeners para cliques manuais
+    amenityItems.forEach((item, index) => {
+        item.addEventListener('click', () => {
+            selectAmenity(index, true);
+        });
+    });
+    
+    // Iniciar o carrossel de amenidades
+    selectAmenity(0);
+    scheduleNextAmenity();
+
+    // Scroll Hijacking para a seção de amenidades - versão aprimorada
+    function setupScrollHijacking() {
+        // Elementos que vamos manipular
+        const amenitiesSection = document.querySelector('.amenities-section');
+        const amenitiesList = document.querySelector('.amenities-list');
+        const amenityItems = document.querySelectorAll('.amenity-item');
+        const body = document.body;
+        
+        // Variáveis de controle
+        let isScrollHijackActive = false;
+        let lastScrollTime = 0;
+        let sectionHeight = 0;
+        let sectionTop = 0;
+        let isLastItemVisible = false;
+        let originalSectionPosition = 0;
+        const scrollCooldown = 100;
+        const scrollAmount = 80;
+        
+        // Função para atualizar as dimensões da seção
+        function updateSectionDimensions() {
+            const rect = amenitiesSection.getBoundingClientRect();
+            sectionTop = window.pageYOffset + rect.top;
+            sectionHeight = rect.height;
+            originalSectionPosition = sectionTop;
+        }
+        
+        // Atualizar dimensões quando a página carregar ou redimensionar
+        window.addEventListener('load', updateSectionDimensions);
+        window.addEventListener('resize', updateSectionDimensions);
+        
+        // Função para verificar se a seção está na posição exata para fixar
+        function shouldFixSection() {
+            const scrollPosition = window.pageYOffset;
+            return scrollPosition >= sectionTop && scrollPosition < (sectionTop + sectionHeight);
+        }
+        
+        // Função para verificar se o último item está visível
+        function checkIfLastItemVisible() {
+            const lastItem = amenityItems[amenityItems.length - 1];
+            const rect = lastItem.getBoundingClientRect();
+            const listRect = amenitiesList.getBoundingClientRect();
+            
+            // Verificar se o último item está visível no final da lista
+            isLastItemVisible = rect.bottom <= listRect.bottom + 20;
+            return isLastItemVisible;
+        }
+        
+        // Função para ativar o scroll hijacking
+        function activateScrollHijack() {
+            if (!isScrollHijackActive) {
+                isScrollHijackActive = true;
+                
+                // Fixa a seção na tela
+                amenitiesSection.classList.add('fixed');
+                body.style.paddingTop = `${sectionHeight}px`;
+                
+                // Adiciona classe visual para indicar que o scroll está sendo hijacked
+                body.classList.add('scroll-hijack-active');
+            }
+        }
+        
+        // Função para desativar o scroll hijacking
+        function deactivateScrollHijack() {
+            if (isScrollHijackActive) {
+                isScrollHijackActive = false;
+                
+                // Remove a fixação da seção
+                amenitiesSection.classList.remove('fixed');
+                body.style.paddingTop = '0';
+                
+                // Remove a classe visual
+                body.classList.remove('scroll-hijack-active');
+                
+                // Só permitir desativar quando o último item for visível
+                if (isLastItemVisible) {
+                    // Posicionar a janela para continuar a partir do final da seção
+                    window.scrollTo({
+                        top: originalSectionPosition + sectionHeight,
+                        behavior: 'auto'
+                    });
+                }
+            }
+        }
+        
+        // Função principal para lidar com o scroll
+        function handleScroll(event) {
+            // Verifica se deve fixar a seção
+            if (shouldFixSection()) {
+                // Verifica se já está no fim da lista
+                if (checkIfLastItemVisible() && event.deltaY > 0) {
+                    deactivateScrollHijack();
+                    return;
+                }
+                
+                // Ativa o hijack do scroll
+                activateScrollHijack();
+                
+                // Verifica se pode rolar (cooldown)
+                const now = Date.now();
+                if (now - lastScrollTime < scrollCooldown) {
+                    event.preventDefault();
+                    return;
+                }
+                
+                // Determina a direção do scroll
+                const delta = Math.sign(event.deltaY);
+                
+                if (delta > 0) {
+                    // Scroll para baixo - rola a lista para cima
+                    amenitiesList.scrollBy({
+                        top: scrollAmount,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Previne o scroll normal da página para manter a posição fixa
+                    event.preventDefault();
+                } else if (delta < 0) {
+                    // Scroll para cima - rola a lista para baixo
+                    if (amenitiesList.scrollTop <= 0) {
+                        // Se já está no topo da lista e o usuário continua rolando para cima
+                        deactivateScrollHijack();
+                    } else {
+                        amenitiesList.scrollBy({
+                            top: -scrollAmount,
+                            behavior: 'smooth'
+                        });
+                        
+                        // Previne o scroll normal da página
+                        event.preventDefault();
+                    }
+                }
+                
+                lastScrollTime = now;
+            } else if (isScrollHijackActive) {
+                // Se a seção não está mais na posição certa, desativa o hijack
+                deactivateScrollHijack();
+            }
+        }
+        
+        // Suporte para dispositivos touch
+        let touchStartY = 0;
+        
+        function handleTouchStart(event) {
+            touchStartY = event.touches[0].clientY;
+        }
+        
+        function handleTouchMove(event) {
+            if (!shouldFixSection()) return;
+            
+            // Ativa o hijack do scroll
+            activateScrollHijack();
+            
+            const touchY = event.touches[0].clientY;
+            const diff = touchStartY - touchY;
+            
+            // Verifica se pode rolar (cooldown)
+            const now = Date.now();
+            if (now - lastScrollTime < scrollCooldown) {
+                event.preventDefault();
+                return;
+            }
+            
+            // Determina a direção do toque com um limiar mínimo
+            if (Math.abs(diff) > 10) {
+                if (diff > 0) {
+                    // Toque para baixo - rola a lista para cima
+                    if (checkIfLastItemVisible()) {
+                        deactivateScrollHijack();
+                    } else {
+                        amenitiesList.scrollBy({
+                            top: scrollAmount,
+                            behavior: 'smooth'
+                        });
+                        
+                        // Previne o scroll normal da página
+                        event.preventDefault();
+                    }
+                } else {
+                    // Toque para cima - rola a lista para baixo
+                    if (amenitiesList.scrollTop <= 0) {
+                        deactivateScrollHijack();
+                    } else {
+                        amenitiesList.scrollBy({
+                            top: -scrollAmount,
+                            behavior: 'smooth'
+                        });
+                        
+                        // Previne o scroll normal da página
+                        event.preventDefault();
+                    }
+                }
+                
+                lastScrollTime = now;
+                touchStartY = touchY;
+            }
+        }
+        
+        // Adiciona o listener de scroll com passive: false para permitir preventDefault
+        window.addEventListener('wheel', handleScroll, { passive: false });
+        
+        // Adiciona suporte touch
+        window.addEventListener('touchstart', handleTouchStart, { passive: true });
+        window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    }
+
+    // Inicializa o scroll hijacking
+    setupScrollHijacking();
 });
