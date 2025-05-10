@@ -524,4 +524,640 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Inicializa o scroll hijacking
     setupScrollHijacking();
+
+    // Função aprimorada para verificar se um elemento está visível na viewport
+    function isElementInViewport(el, offset = 0) {
+        const rect = el.getBoundingClientRect();
+        return (
+            rect.top <= (window.innerHeight || document.documentElement.clientHeight) - offset &&
+            rect.bottom >= 0 + offset &&
+            rect.left <= (window.innerWidth || document.documentElement.clientWidth) - offset &&
+            rect.right >= 0 + offset
+        );
+    }
+
+    // Função para inicializar as animações de amenidades
+    function initAmenitiesAnimations() {
+        const amenitiesSection = document.querySelector('.new-amenities-section');
+        if (!amenitiesSection) return;
+
+        const title = amenitiesSection.querySelector('.new-amenities-title h2');
+        const amenityItems = Array.from(amenitiesSection.querySelectorAll('.new-amenity-item'));
+        const amenityImages = Array.from(amenitiesSection.querySelectorAll('.new-amenity-image'));
+        const cta = amenitiesSection.querySelector('.new-amenities-cta');
+        
+        // Definir índices para animação em cascata
+        amenityItems.forEach((item, index) => {
+            item.style.setProperty('--item-index', index);
+        });
+
+        // Função para animar elementos quando visíveis
+        function animateElementsInView() {
+            if (isElementInViewport(amenitiesSection, 100)) {
+                title?.classList.add('fade-in');
+                
+                // Animação em cascata para os itens
+                amenityItems.forEach((item, index) => {
+                    setTimeout(() => {
+                        item.classList.add('fade-in');
+                    }, 100 * (index + 1));
+                });
+                
+                // Animar o primeiro item e a imagem por padrão
+                if (amenityItems.length > 0 && amenityImages.length > 0) {
+                    setTimeout(() => {
+                        amenityItems[0].classList.add('active');
+                        amenityImages[0].classList.add('active', 'fade-in');
+                    }, 300);
+                }
+                
+                // Animar o CTA com um pequeno atraso
+                setTimeout(() => {
+                    cta?.classList.add('fade-in');
+                }, 200 + (amenityItems.length * 100));
+                
+                // Remover o listener após a animação
+                window.removeEventListener('scroll', animateElementsInView);
+            }
+        }
+
+        // Gerenciar interatividade entre itens e imagens
+        amenityItems.forEach((item, index) => {
+            item.addEventListener('mouseenter', () => {
+                // Remover classes ativas de todos os itens e imagens
+                amenityItems.forEach(i => i.classList.remove('active'));
+                amenityImages.forEach(img => {
+                    img.classList.remove('active', 'fade-in');
+                });
+                
+                // Adicionar classes ativas ao item atual e à imagem correspondente
+                item.classList.add('active');
+                if (amenityImages[index]) {
+                    amenityImages[index].classList.add('active', 'fade-in');
+                }
+            });
+        });
+
+        // Iniciar animações quando a página carrega se já estiver visível
+        if (isElementInViewport(amenitiesSection, 100)) {
+            animateElementsInView();
+        } else {
+            window.addEventListener('scroll', animateElementsInView);
+        }
+    }
+
+    // Função para animar todos os elementos ao scroll
+    function initScrollAnimations() {
+        const animatedElements = document.querySelectorAll('.animate-on-scroll');
+        
+        function checkScroll() {
+            animatedElements.forEach(element => {
+                if (isElementInViewport(element, 150)) {
+                    element.classList.add('fade-in');
+                } else if (element.hasAttribute('data-repeat-animation')) {
+                    element.classList.remove('fade-in');
+                }
+            });
+        }
+        
+        // Verificar elementos visíveis no carregamento
+        window.addEventListener('load', checkScroll);
+        // Verificar elementos visíveis durante o scroll
+        window.addEventListener('scroll', checkScroll);
+    }
+
+    // Inicializar animações
+    initAmenitiesAnimations();
+    initScrollAnimations();
+
+    // Implementação performática para as amenidades
+    initAmenitiesSection();
+});
+
+/**
+ * Inicializa a seção de amenidades com interações otimizadas
+ */
+function initAmenitiesSection() {
+    const section = document.querySelector('.new-amenities-section');
+    if (!section) return;
+
+    const amenityItems = section.querySelectorAll('.new-amenity-item');
+    const amenityImages = section.querySelectorAll('.new-amenity-image');
+    const title = section.querySelector('.new-amenities-title');
+    const cta = section.querySelector('.new-amenities-cta');
+
+    // Função para ativar um item e sua imagem correspondente
+    function activateItem(index) {
+        // Desativa todos os itens e imagens
+        amenityItems.forEach(item => item.classList.remove('active'));
+        amenityImages.forEach(img => img.classList.remove('active'));
+        
+        // Ativa apenas o item e imagem correspondentes ao índice
+        amenityItems[index].classList.add('active');
+        amenityImages[index].classList.add('active');
+    }
+
+    // Adiciona os event listeners com delegação de eventos para melhor performance
+    const amenitiesList = section.querySelector('.new-amenities-list');
+    amenitiesList.addEventListener('mouseover', function(e) {
+        const item = e.target.closest('.new-amenity-item');
+        if (item) {
+            const index = parseInt(item.dataset.index);
+            if (!isNaN(index)) {
+                activateItem(index);
+            }
+        }
+    });
+
+    // Adiciona animações de entrada usando IntersectionObserver para performance
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                if (entry.target === title || entry.target === cta) {
+                    entry.target.classList.add('fade-in');
+                } else {
+                    // Animação em cascata para os itens
+                    const items = Array.from(amenityItems);
+                    items.forEach((item, index) => {
+                        setTimeout(() => {
+                            item.classList.add('fade-in');
+                        }, 100 * index);
+                    });
+                }
+                // Desconecta o observer após a animação
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+
+    // Observa os elementos para animações
+    observer.observe(title);
+    observer.observe(amenitiesList);
+    observer.observe(cta);
+
+    // Define o primeiro item como ativo por padrão
+    activateItem(0);
+}
+
+// Função otimizada para a seção de amenidades
+function initNewAmenitiesSection() {
+    const amenityItems = document.querySelectorAll('.new-amenity-item');
+    const amenityImages = document.querySelectorAll('.new-amenity-image');
+
+    // Função para ativar um item específico
+    function activateItem(index) {
+        // Remover classes ativas de todos os itens e imagens
+        amenityItems.forEach(item => item.classList.remove('active'));
+        amenityImages.forEach(img => img.classList.remove('active'));
+        
+        // Adicionar classe ativa ao item e imagem correspondente
+        amenityItems[index].classList.add('active');
+        amenityImages[index].classList.add('active');
+    }
+
+    // Adicionar event listeners para os itens
+    amenityItems.forEach((item, index) => {
+        // Ao passar o mouse sobre o item
+        item.addEventListener('mouseenter', () => {
+            activateItem(index);
+        });
+        
+        // Também ativar ao clicar no item para dispositivos móveis
+        item.addEventListener('click', () => {
+            activateItem(index);
+        });
+    });
+
+    // Ativar o primeiro item por padrão
+    activateItem(0);
+
+    // Implementar animação de entrada para os itens
+    const animateItems = () => {
+        amenityItems.forEach((item, index) => {
+            setTimeout(() => {
+                item.classList.add('fade-in');
+            }, index * 100);
+        });
+    };
+
+    // Verificar se a seção está no viewport
+    const amenitiesSection = document.querySelector('.new-amenities-section');
+    if (amenitiesSection) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateItems();
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.2 });
+        
+        observer.observe(amenitiesSection);
+    }
+}
+
+// Função para a rolagem suave
+function initSmoothScroll() {
+    // Seleciona todos os links que começam com #
+    const links = document.querySelectorAll('a[href^="#"]');
+    
+    links.forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Previne o comportamento padrão do link
+            e.preventDefault();
+            
+            // Obtém o alvo do link
+            const targetId = this.getAttribute('href');
+            
+            // Retorna se o link é apenas "#"
+            if (targetId === "#") return;
+            
+            const targetElement = document.querySelector(targetId);
+            
+            if (targetElement) {
+                // Faz a rolagem suave até o elemento
+                window.scrollTo({
+                    top: targetElement.offsetTop,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+}
+
+// Iniciar quando o DOM estiver carregado
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar a nova seção de amenidades
+    initNewAmenitiesSection();
+    
+    // Inicializar a rolagem suave
+    initSmoothScroll();
+});
+
+// Contact Section Animations with anime.js
+function initContactAnimations() {
+    const contactSection = document.getElementById('contato');
+    if (!contactSection) return;
+
+    // Elements to animate
+    const contactHeader = contactSection.querySelector('.contact-header');
+    const formGroups = contactSection.querySelectorAll('.form-group');
+    const submitButton = contactSection.querySelector('.contact-button');
+    const infoItems = contactSection.querySelectorAll('.info-item');
+    const socialMedia = contactSection.querySelector('.social-media');
+
+    // Make sure elements are visible by default - this ensures content appears even without animations
+    anime.set([contactHeader, formGroups, submitButton, infoItems, socialMedia], {
+        opacity: 1,
+        translateY: 0,
+        translateX: 0
+    });
+
+    // Prepare for animation only if Intersection Observer is supported
+    if ('IntersectionObserver' in window) {
+        // Setup initial animation state only when observer is created
+        anime.set(contactHeader, {
+            opacity: 0,
+            translateY: 30
+        });
+
+        anime.set(formGroups, {
+            opacity: 0,
+            translateY: 20
+        });
+
+        anime.set(submitButton, {
+            opacity: 0,
+            translateY: 20
+        });
+
+        anime.set(infoItems, {
+            opacity: 0,
+            translateX: 30
+        });
+
+        anime.set(socialMedia, {
+            opacity: 0,
+            translateY: 20
+        });
+
+        // Intersection Observer to trigger animations when section comes into view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Animate header first
+                    anime({
+                        targets: contactHeader,
+                        opacity: 1,
+                        translateY: 0,
+                        easing: 'easeOutCubic',
+                        duration: 800
+                    });
+
+                    // Then animate form groups with staggered delay
+                    anime({
+                        targets: formGroups,
+                        opacity: 1,
+                        translateY: 0,
+                        delay: anime.stagger(100),
+                        easing: 'easeOutCubic',
+                        duration: 600
+                    });
+
+                    // Animate submit button
+                    anime({
+                        targets: submitButton,
+                        opacity: 1,
+                        translateY: 0,
+                        easing: 'easeOutCubic',
+                        duration: 600,
+                        delay: 400
+                    });
+
+                    // Animate info items with staggered delay
+                    anime({
+                        targets: infoItems,
+                        opacity: 1,
+                        translateX: 0,
+                        delay: anime.stagger(150, {start: 300}),
+                        easing: 'easeOutCubic',
+                        duration: 800
+                    });
+
+                    // Animate social media last
+                    anime({
+                        targets: socialMedia,
+                        opacity: 1,
+                        translateY: 0,
+                        easing: 'easeOutCubic',
+                        duration: 600,
+                        delay: 800
+                    });
+
+                    // Disconnect observer after triggering animations
+                    observer.disconnect();
+                }
+            });
+        }, {
+            threshold: 0.2
+        });
+
+        observer.observe(contactSection);
+    }
+
+    // Add hover animations for form elements
+    const formInputs = contactSection.querySelectorAll('.form-group input, .form-group textarea');
+    formInputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            anime({
+                targets: this.parentElement,
+                scale: 1.02,
+                duration: 300,
+                easing: 'easeOutCubic'
+            });
+        });
+
+        input.addEventListener('blur', function() {
+            anime({
+                targets: this.parentElement,
+                scale: 1,
+                duration: 300,
+                easing: 'easeOutCubic'
+            });
+        });
+    });
+
+    // Add hover animations for social media icons
+    const socialIcons = contactSection.querySelectorAll('.social-icons a');
+    socialIcons.forEach(icon => {
+        icon.addEventListener('mouseenter', function() {
+            anime({
+                targets: this,
+                scale: 1.2,
+                rotate: '5deg',
+                duration: 300,
+                easing: 'easeOutBack'
+            });
+        });
+
+        icon.addEventListener('mouseleave', function() {
+            anime({
+                targets: this,
+                scale: 1,
+                rotate: '0deg',
+                duration: 300,
+                easing: 'easeOutBack'
+            });
+        });
+    });
+
+    // Add animation for submit button
+    if (submitButton) {
+        submitButton.addEventListener('mouseenter', function() {
+            anime({
+                targets: this,
+                scale: 1.05,
+                duration: 300,
+                easing: 'easeOutElastic(1, .5)'
+            });
+        });
+
+        submitButton.addEventListener('mouseleave', function() {
+            anime({
+                targets: this,
+                scale: 1,
+                duration: 300,
+                easing: 'easeOutElastic(1, .5)'
+            });
+        });
+    }
+}
+
+// Disappearing animations when scrolling away
+function setupDisappearingAnimations() {
+    const contactSection = document.getElementById('contato');
+    if (!contactSection) return;
+
+    const elements = {
+        header: contactSection.querySelector('.contact-header'),
+        form: contactSection.querySelector('.contact-form'),
+        info: contactSection.querySelector('.contact-info')
+    };
+
+    // Observer for triggering disappearing animations
+    const disappearObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) {
+                // When scrolling away, fade out elements
+                anime({
+                    targets: [elements.header, elements.form, elements.info],
+                    opacity: [1, 0],
+                    translateY: [0, -30],
+                    easing: 'easeInCubic',
+                    duration: 600,
+                    delay: anime.stagger(100)
+                });
+            } else {
+                // When coming back into view, fade in elements
+                anime({
+                    targets: [elements.header, elements.form, elements.info],
+                    opacity: [0, 1],
+                    translateY: [-30, 0],
+                    easing: 'easeOutCubic',
+                    duration: 800,
+                    delay: anime.stagger(150)
+                });
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '-20% 0px'
+    });
+
+    disappearObserver.observe(contactSection);
+}
+
+// Animações para a seção de amenidades com anime.js
+function initAmenitiesAnimeAnimations() {
+    const amenitiesSection = document.querySelector('.new-amenities-section');
+    if (!amenitiesSection) return;
+
+    // Elementos para animar
+    const amenitiesTitle = amenitiesSection.querySelector('.new-amenities-title h2');
+    const amenityItems = amenitiesSection.querySelectorAll('.new-amenity-item');
+    const amenityImages = amenitiesSection.querySelector('.new-amenities-images');
+    const amenitiesCta = amenitiesSection.querySelector('.new-amenities-cta');
+
+    // Função para configurar estado inicial
+    function resetAnimationState() {
+        anime.set(amenitiesTitle, {
+            opacity: 0,
+            translateY: 30
+        });
+
+        anime.set(amenityItems, {
+            opacity: 0,
+            translateY: 20
+        });
+
+        anime.set(amenityImages, {
+            opacity: 0,
+            translateX: 30
+        });
+
+        anime.set(amenitiesCta, {
+            opacity: 0,
+            translateY: 20
+        });
+    }
+
+    // Função para executar as animações
+    function animateElements() {
+        // Animar o título primeiro
+        anime({
+            targets: amenitiesTitle,
+            opacity: 1,
+            translateY: 0,
+            easing: 'easeOutCubic',
+            duration: 800
+        });
+
+        // Animar os itens de amenidades com delay escalonado
+        anime({
+            targets: amenityItems,
+            opacity: 1,
+            translateY: 0,
+            delay: anime.stagger(100),
+            easing: 'easeOutCubic',
+            duration: 600
+        });
+
+        // Animar as imagens
+        anime({
+            targets: amenityImages,
+            opacity: 1,
+            translateX: 0,
+            easing: 'easeOutCubic',
+            duration: 800,
+            delay: 300
+        });
+
+        // Animar o CTA por último
+        anime({
+            targets: amenitiesCta,
+            opacity: 1,
+            translateY: 0,
+            easing: 'easeOutCubic',
+            duration: 600,
+            delay: 800
+        });
+    }
+
+    // Inicializar o estado antes da primeira animação
+    resetAnimationState();
+
+    // Observer para disparar animações quando a seção estiver visível
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            // Quando a seção entra no viewport
+            if (entry.isIntersecting) {
+                // Animar os elementos
+                animateElements();
+            } else {
+                // Quando a seção sai do viewport, resetamos o estado
+                // para que possa ser animado novamente na próxima vez
+                resetAnimationState();
+            }
+        });
+    }, {
+        threshold: 0.2,  // 20% da seção visível para disparar
+        rootMargin: '-10% 0px'  // Margem para melhorar a experiência visual
+    });
+
+    // Iniciar a observação da seção
+    observer.observe(amenitiesSection);
+
+    // Adicionar animações de hover para os itens de amenidades
+    amenityItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            anime({
+                targets: this,
+                scale: 1.05,
+                duration: 300,
+                easing: 'easeOutElastic(1, .5)'
+            });
+        });
+
+        item.addEventListener('mouseleave', function() {
+            anime({
+                targets: this,
+                scale: 1,
+                duration: 300,
+                easing: 'easeOutElastic(1, .5)'
+            });
+        });
+    });
+}
+
+// Initialize all animations when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait for anime.js to be loaded and available
+    if (typeof anime !== 'undefined') {
+        initContactAnimations();
+        setupDisappearingAnimations();
+        initAmenitiesAnimeAnimations(); // Adicionando as novas animações
+    } else {
+        // If anime.js isn't loaded yet, wait for it
+        window.addEventListener('load', function() {
+            if (typeof anime !== 'undefined') {
+                initContactAnimations();
+                setupDisappearingAnimations();
+                initAmenitiesAnimeAnimations(); // Adicionando as novas animações
+            } else {
+                console.error('anime.js library is not loaded');
+            }
+        });
+    }
 });
