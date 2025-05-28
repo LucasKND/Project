@@ -98,19 +98,32 @@ document.addEventListener('DOMContentLoaded', function() {
     function setupMobileMenu() {
         if (window.innerWidth <= 991) {
             const navigationBar = document.querySelector('.navigation-bar .container');
-            
-            if (!document.querySelector('.mobile-toggle')) {
+              if (!document.querySelector('.mobile-toggle')) {
                 const mobileToggle = document.createElement('div');
                 mobileToggle.className = 'mobile-toggle';
-                mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                mobileToggle.innerHTML = `
+                    <div class="hamburger">
+                        <span class="line line1"></span>
+                        <span class="line line2"></span>
+                        <span class="line line3"></span>
+                    </div>
+                `;
                 
                 navigationBar.appendChild(mobileToggle);
-                
-                mobileToggle.addEventListener('click', function() {
+                  mobileToggle.addEventListener('click', function() {
                     const navMenu = document.querySelector('nav ul');
+                    const hamburger = mobileToggle.querySelector('.hamburger');
+                    
                     if (navMenu.style.display === 'flex') {
-                        navMenu.style.display = 'none';
+                        // Fechar menu
+                        navMenu.classList.remove('show');
+                        hamburger.classList.remove('active');
+                        
+                        setTimeout(() => {
+                            navMenu.style.display = 'none';
+                        }, 300);
                     } else {
+                        // Abrir menu
                         navMenu.style.display = 'flex';
                         navMenu.style.flexDirection = 'column';
                         navMenu.style.position = 'absolute';
@@ -119,7 +132,51 @@ document.addEventListener('DOMContentLoaded', function() {
                         navMenu.style.backgroundColor = '#282828';
                         navMenu.style.padding = '20px';
                         navMenu.style.width = '250px';
+                        navMenu.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+                        navMenu.style.borderRadius = '8px';
+                        navMenu.style.zIndex = '1000';
+                        navMenu.className = 'mobile-menu';
+                        
+                        hamburger.classList.add('active');
+                          setTimeout(() => {
+                            navMenu.classList.add('show');
+                        }, 10);
                     }
+                });
+                
+                // Fechar menu ao clicar fora
+                document.addEventListener('click', function(event) {
+                    const navMenu = document.querySelector('nav ul');
+                    const hamburger = mobileToggle.querySelector('.hamburger');
+                    
+                    if (!mobileToggle.contains(event.target) && !navMenu.contains(event.target)) {
+                        if (navMenu.style.display === 'flex') {
+                            navMenu.classList.remove('show');
+                            hamburger.classList.remove('active');
+                            
+                            setTimeout(() => {
+                                navMenu.style.display = 'none';
+                            }, 300);
+                        }
+                    }
+                });
+                
+                // Fechar menu ao clicar em um link
+                const menuLinks = document.querySelectorAll('nav ul li a');
+                menuLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        const navMenu = document.querySelector('nav ul');
+                        const hamburger = mobileToggle.querySelector('.hamburger');
+                        
+                        if (navMenu.style.display === 'flex') {
+                            navMenu.classList.remove('show');
+                            hamburger.classList.remove('active');
+                            
+                            setTimeout(() => {
+                                navMenu.style.display = 'none';
+                            }, 300);
+                        }
+                    });
                 });
             }
         }
