@@ -533,22 +533,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const carouselControls = document.querySelectorAll('.carousel-control-prev, .carousel-control-next');
     carouselControls.forEach(control => {
         control.addEventListener('click', function(e) {
-            e.preventDefault(); // Impede o comportamento padrão de navegação para a âncora
+            e.preventDefault();
             
-            // Identificar a direção do slide (prev ou next)
             const direction = this.classList.contains('carousel-control-prev') ? 'prev' : 'next';
             
-            // Obter o ID do carousel alvo
             const targetId = this.getAttribute('href');
             
-            // Usar a API do Bootstrap para manipular o carrossel
             const carousel = document.querySelector(targetId);
             if (carousel) {
-                // Se o Bootstrap 4 estiver disponível com jQuery
                 if (typeof $ !== 'undefined' && typeof $(targetId).carousel === 'function') {
                     $(targetId).carousel(direction);
                 } 
-                // Fallback para o Bootstrap 5 (que usa JavaScript puro)
                 else if (typeof bootstrap !== 'undefined') {
                     const carouselInstance = bootstrap.Carousel.getInstance(carousel);
                     if (carouselInstance) {
